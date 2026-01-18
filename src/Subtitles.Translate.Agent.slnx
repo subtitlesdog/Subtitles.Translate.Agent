@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Subtitles.Translate.Agent.Core/Subtitles.Translate.Agent.Core.csproj" />
+  <Project Path="Subtitles.Translate.Agent/Subtitles.Translate.Agent.csproj" />
+</Solution>
