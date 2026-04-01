@@ -47,6 +47,14 @@ $env:OPENAI_API_KEY="YOUR_KEY"
 .\Subtitles.Translate.Agent --file "D:\subs\demo.srt" --lang "Simplified Chinese"
 ```
 
+macOS / Linux:
+
+```bash
+export OPENAI_API_KEY="YOUR_KEY"
+chmod +x ./Subtitles.Translate.Agent
+./Subtitles.Translate.Agent --file "/path/to/demo.srt" --lang "Simplified Chinese"
+```
+
 Bilingual output:
 
 ```powershell
@@ -61,6 +69,24 @@ Specify output path:
 
 #### Interactive mode
 Run without any arguments to enter interactive mode (it will prompt for file path, target language, and API key).
+
+#### Manual packaging (cross-compile on Windows)
+
+```powershell
+dotnet publish src/Subtitles.Translate.Agent/Subtitles.Translate.Agent.csproj -c Release -r win-x64 --self-contained true -o .\dist\win-x64 /p:PublishSingleFile=true
+dotnet publish src/Subtitles.Translate.Agent/Subtitles.Translate.Agent.csproj -c Release -r linux-x64 --self-contained true -o .\dist\linux-x64 /p:PublishSingleFile=true
+dotnet publish src/Subtitles.Translate.Agent/Subtitles.Translate.Agent.csproj -c Release -r osx-x64 --self-contained true -o .\dist\osx-x64 /p:PublishSingleFile=true
+dotnet publish src/Subtitles.Translate.Agent/Subtitles.Translate.Agent.csproj -c Release -r osx-arm64 --self-contained true -o .\dist\osx-arm64 /p:PublishSingleFile=true
+```
+
+Zip:
+
+```powershell
+Compress-Archive -Path .\dist\win-x64\* -DestinationPath .\dist\Subtitles.Translate.Agent-win-x64.zip -Force
+Compress-Archive -Path .\dist\linux-x64\* -DestinationPath .\dist\Subtitles.Translate.Agent-linux-x64.zip -Force
+Compress-Archive -Path .\dist\osx-x64\* -DestinationPath .\dist\Subtitles.Translate.Agent-osx-x64.zip -Force
+Compress-Archive -Path .\dist\osx-arm64\* -DestinationPath .\dist\Subtitles.Translate.Agent-osx-arm64.zip -Force
+```
 
 #### Output Files
 - Default output: `OriginalFileName.<lang>.srt` in the same directory as the input

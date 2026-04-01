@@ -41,11 +41,19 @@ dotnet run --project .\Subtitles.Translate.Agent\Subtitles.Translate.Agent.cspro
   - `chmod +x ./Subtitles.Translate.Agent`
 
 #### 命令行用法
-示例（API Key 建议用环境变量）：
+Windows PowerShell 示例（API Key 建议用环境变量）：
 
 ```powershell
 $env:OPENAI_API_KEY="YOUR_KEY"
 .\Subtitles.Translate.Agent --file "D:\subs\demo.srt" --lang "简体中文"
+```
+
+macOS / Linux 示例：
+
+```bash
+export OPENAI_API_KEY="YOUR_KEY"
+chmod +x ./Subtitles.Translate.Agent
+./Subtitles.Translate.Agent --file "/path/to/demo.srt" --lang "简体中文"
 ```
 
 生成双语字幕：
@@ -62,6 +70,25 @@ $env:OPENAI_API_KEY="YOUR_KEY"
 
 #### 交互式模式
 不带任何参数直接运行会进入交互式模式（会提示输入文件路径、目标语言、API Key）。
+
+#### 手动打包（Windows 上交叉编译 Linux/macOS）
+在项目根目录执行（会输出到 `dist/`，可直接上传到 GitHub Release）：
+
+```powershell
+dotnet publish src/Subtitles.Translate.Agent/Subtitles.Translate.Agent.csproj -c Release -r win-x64 --self-contained true -o .\dist\win-x64 /p:PublishSingleFile=true
+dotnet publish src/Subtitles.Translate.Agent/Subtitles.Translate.Agent.csproj -c Release -r linux-x64 --self-contained true -o .\dist\linux-x64 /p:PublishSingleFile=true
+dotnet publish src/Subtitles.Translate.Agent/Subtitles.Translate.Agent.csproj -c Release -r osx-x64 --self-contained true -o .\dist\osx-x64 /p:PublishSingleFile=true
+dotnet publish src/Subtitles.Translate.Agent/Subtitles.Translate.Agent.csproj -c Release -r osx-arm64 --self-contained true -o .\dist\osx-arm64 /p:PublishSingleFile=true
+```
+
+打 zip 包：
+
+```powershell
+Compress-Archive -Path .\dist\win-x64\* -DestinationPath .\dist\Subtitles.Translate.Agent-win-x64.zip -Force
+Compress-Archive -Path .\dist\linux-x64\* -DestinationPath .\dist\Subtitles.Translate.Agent-linux-x64.zip -Force
+Compress-Archive -Path .\dist\osx-x64\* -DestinationPath .\dist\Subtitles.Translate.Agent-osx-x64.zip -Force
+Compress-Archive -Path .\dist\osx-arm64\* -DestinationPath .\dist\Subtitles.Translate.Agent-osx-arm64.zip -Force
+```
 
 #### 输出文件
 - 默认输出：与原字幕同目录 `原文件名.<lang>.srt`
