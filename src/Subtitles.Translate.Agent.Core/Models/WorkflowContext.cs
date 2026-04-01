@@ -73,6 +73,22 @@ public class WorkflowContext
     /// Translation progress
     /// </summary>
     public TranslationProgress? TranslationProgress { get; set; }
+
+    /// <summary>
+    /// Review statistics
+    /// </summary>
+    public ReviewStatistics ReviewStatistics { get; set; } = new();
+
+    /// <summary>
+    /// Timing adjustments list
+    /// </summary>
+    public List<TimingAdjustmentItem> TimingAdjustments { get; set; } = new();
+
+    /// <summary>
+    /// Timing adjustments statistics
+    /// </summary>
+    public TimingStatistics TimingStatistics { get; set; } = new();
+
     /// <summary>
     /// Token usage summary
     /// </summary>

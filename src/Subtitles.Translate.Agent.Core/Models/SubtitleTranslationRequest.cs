@@ -16,7 +16,7 @@ namespace Subtitles.Translate.Agent.Core.Models
         /// <summary>
         /// Target language
         /// </summary>
-        public string TargetLanguage { get; set; } = "Simplified Chinese";
+        public string TargetLanguage { get; set; } = "简体中文";
         #endregion
 
         #region Translation Batch Configuration
@@ -36,6 +36,16 @@ namespace Subtitles.Translate.Agent.Core.Models
         /// Whether to enable final polishing
         /// </summary>
         public bool EnablePolishing { get; set; } = true;
+
+        /// <summary>
+        /// Whether to enable review (Step 4)
+        /// </summary>
+        public bool EnableReview { get; set; } = true;
+
+        /// <summary>
+        /// Whether to enable timing adjustment
+        /// </summary>
+        public bool EnableTimingAdjustment { get; set; } = true;
 
         /// <summary>
         /// Maximum number of retries

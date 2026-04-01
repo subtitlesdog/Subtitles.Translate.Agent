@@ -23,8 +23,8 @@ public class TranslationItem
     /// Translation content (initial)
     /// </summary>
     [JsonPropertyName("translation")]
-    public string Translation => PolishedTranslation
-        ?? ReviewedTranslation ?? InitialTranslation ?? "";
+    public string Translation => PolishText ?? PolishedTranslation
+        ?? ReviewFinalTranslation ?? ReviewedTranslation ?? InitialTranslation ?? "";
 
     /// <summary>
     /// Initial translation backup (for logging and comparison)

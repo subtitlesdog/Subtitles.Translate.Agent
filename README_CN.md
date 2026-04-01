@@ -26,27 +26,68 @@
 - .NET SDK 10.0（本项目 TargetFramework 为 net10.0）
 - 可用的大模型 API Key 与 Endpoint（启动入口里可自定义）
 
-#### 运行
+#### 从源码运行
 在项目根目录执行：
 
 ```powershell
 cd src
 dotnet restore
-dotnet run --project .\Subtitles.Translate.Agent\Subtitles.Translate.Agent.csproj
+dotnet run --project .\Subtitles.Translate.Agent\Subtitles.Translate.Agent.csproj -- --help
 ```
 
-#### 交互式使用
-程序启动后会依次提示：
-- 输入字幕文件本地路径（支持拖拽到终端）
-- 输入目标语言（回车默认：Simplified Chinese）
-- 输入 API Key（未配置时会提示输入）
+#### 从 Releases 运行（推荐）
+- 到 GitHub Releases 下载对应系统的压缩包，解压后运行
+- macOS / Linux 首次运行可能需要：
+  - `chmod +x ./Subtitles.Translate.Agent`
+
+#### 命令行用法
+示例（API Key 建议用环境变量）：
+
+```powershell
+$env:OPENAI_API_KEY="YOUR_KEY"
+.\Subtitles.Translate.Agent --file "D:\subs\demo.srt" --lang "简体中文"
+```
+
+生成双语字幕：
+
+```powershell
+.\Subtitles.Translate.Agent --file "D:\subs\demo.srt" --lang "简体中文" --bilingual
+```
+
+指定输出路径：
+
+```powershell
+.\Subtitles.Translate.Agent --file "D:\subs\demo.srt" --output "D:\subs\demo.zh.srt"
+```
+
+#### 交互式模式
+不带任何参数直接运行会进入交互式模式（会提示输入文件路径、目标语言、API Key）。
 
 #### 输出文件
-- 翻译完成后，会在原字幕同目录生成：`原文件名.<targetLanguage>.srt`
-- 默认写出单语译文（`GenerateTranslatedSrt()`）；如需双语字幕，可将入口处改为 `GenerateBilingualSrt()`
+- 默认输出：与原字幕同目录 `原文件名.<lang>.srt`
+- 可通过 `--output` 指定输出路径
+
+#### 参数列表
+- `-f, --file <path>`：输入字幕文件路径（非交互模式必填）
+- `-l, --lang <language>`：目标语言（默认：简体中文）
+- `-k, --key <key>`：API Key（也可用 `OPENAI_API_KEY` 环境变量）
+- `-m, --model <model>`：模型 ID（默认：gpt-4o）
+- `-e, --endpoint <url>`：API Endpoint（默认：https://api.openai.com/v1）
+- `-b, --bilingual`：输出双语字幕
+- `-o, --output <path>`：输出文件路径（默认：`<input>.<lang>.srt`）
+- `--batch-size <n>`：每批翻译行数（默认：20）
+- `--slide-step <n>`：滑动窗口步长（默认：10）
+- `--preceding <n>`：前文上下文行数（默认：2）
+- `--following <n>`：后文预览行数（默认：2）
+- `--no-review`：关闭 Step4 审校
+- `--no-polish`：关闭润色（如适用）
+- `--no-timing-adjust`：关闭时间轴微调
+- `--max-retries <n>`：最大重试次数（默认：3）
+- `-h, --help`：查看帮助
+- `-v, --version`：查看版本
 
 #### 自定义模型与端点
-入口配置位于 [Program.cs:L90-L105](file:///d:/code/SubtitlesDog/Subtitles.Translate.Agent/src/Subtitles.Translate.Agent/Program.cs#L90-L105) 的 `AgentSystemConfig` 初始化处，可修改 `ModelId`、`Endpoint`、`ApiKey` 等参数。
+入口配置位于 `AgentSystemConfig` 初始化处（见 [Program.cs](src/Subtitles.Translate.Agent/Program.cs)），可修改 `ModelId`、`Endpoint`、`ApiKey` 等参数。
 
 ```csharp
 // src/Subtitles.Translate.Agent/Program.cs

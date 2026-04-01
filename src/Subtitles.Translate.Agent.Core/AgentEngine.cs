@@ -74,6 +74,12 @@ public class AgentEngine
         // Step 3: Translation (includes Step 4 Review)
         // Note: Translator Agent has an additional batch-level retry mechanism internally
         await RunStageAsync<Step3_TranslatorAgent>(WorkflowStage.TranslationCompleted);
+
+        // Step 5: Timing adjustment
+        if (_context.Request.EnableTimingAdjustment)
+        {
+            await RunStageAsync<Step5_TimingAdjusterAgent>(WorkflowStage.TimingAdjusted);
+        }
     }
 
     /// <summary>
@@ -237,7 +243,7 @@ public class AgentEngine
                 // Could also check if t.Id matches p.ID, but p.ID generation rule is uncertain, and Step3 generates in order
                 if (!string.IsNullOrEmpty(t.Translation))
                 {
-                    newP.Text += p.Text + "\n" + t.Translation;
+                    newP.Text = $"{p.Text}\n{t.Translation}";
                 }
             }
 

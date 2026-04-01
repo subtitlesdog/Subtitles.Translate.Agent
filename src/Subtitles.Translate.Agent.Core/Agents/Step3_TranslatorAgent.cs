@@ -17,6 +17,7 @@ namespace Subtitles.Translate.Agent.Core.Agents
     {
         public const string AgentName = nameof(Step3_TranslatorAgent);
         private readonly AIAgent _agent;
+        private readonly Step4_ReviewerAgent _reviewerAgent;
         private int _currentBatchIndex;
 
         public Step3_TranslatorAgent(WorkflowContext context)
@@ -26,6 +27,8 @@ namespace Subtitles.Translate.Agent.Core.Agents
             var client = CreateChatClient();
             _agent = client.CreateAIAgent().AsBuilder().Build();
 
+            // Initialize Reviewer Agent
+            _reviewerAgent = new Step4_ReviewerAgent(context);
         }
 
         /// <summary>
@@ -152,6 +155,48 @@ namespace Subtitles.Translate.Agent.Core.Agents
                 Original = r.Original,
                 InitialTranslation = r.InitialTranslation
             }).ToList();
+
+            // Execute review
+            if (_context.Request.EnableReview)
+            {
+                translations = await ExecuteReviewAsync(translations);
+            }
+
+            return translations;
+        }
+
+        /// <summary>
+        /// Execute review workflow
+        /// </summary>
+        private async Task<List<TranslationItem>> ExecuteReviewAsync(List<TranslationItem> translations)
+        {
+            _logger?.LogDebug("Executing review...");
+            _reviewerAgent.SetBatchIndex(_currentBatchIndex);
+
+            var reviewedItems = await _reviewerAgent.ReviewBatchAsync(_context, translations);
+
+            // Verify reviewed result count matches
+            if (translations.Count != reviewedItems.Count)
+            {
+                throw new InvalidOperationException(
+                    $"Review result count mismatch: Expected {translations.Count}, Actual {reviewedItems.Count}");
+            }
+
+            // Update statistics
+            _context.ReviewStatistics.TotalReviewed += reviewedItems.Count;
+            _context.ReviewStatistics.FixedCount += reviewedItems.Count(r => r.IsFixed);
+            _context.ReviewStatistics.PassedCount += reviewedItems.Count(r => !r.IsFixed);
+
+            // Update translation results with reviewed translations, and save review details
+            foreach (var (translation, review) in translations.Zip(reviewedItems))
+            {
+                translation.ReviewStatus = review.Status;
+                translation.ReviewCritique = review.Critique;
+                translation.ReviewFinalTranslation = review.FinalTranslation;
+            }
+
+            _logger?.LogDebug("Review completed, fixed {Fixed} items, passed {Passed} items",
+                reviewedItems.Count(r => r.IsFixed), reviewedItems.Count(r => !r.IsFixed));
 
             return translations;
         }

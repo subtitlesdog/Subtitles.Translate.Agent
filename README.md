@@ -25,27 +25,68 @@
 - .NET SDK 10.0 (This project TargetFramework is net10.0)
 - Available LLM API Key and Endpoint (customizable in the startup entry)
 
-#### Run
+#### Run from source
 Execute in the project root directory:
 
 ```powershell
 cd src
 dotnet restore
-dotnet run --project .\Subtitles.Translate.Agent\Subtitles.Translate.Agent.csproj
+dotnet run --project .\Subtitles.Translate.Agent\Subtitles.Translate.Agent.csproj -- --help
 ```
 
-#### Interactive Use
-After startup, the program will prompt sequentially:
-- Enter local subtitle file path (supports drag and drop to terminal)
-- Enter target language (Enter defaults to: Simplified Chinese)
-- Enter API Key (prompts if not configured)
+#### Run from Releases (Recommended)
+- Download the archive for your OS from GitHub Releases, unzip, then run it
+- On macOS / Linux, you may need:
+  - `chmod +x ./Subtitles.Translate.Agent`
+
+#### CLI usage
+Example (recommended: set API key via env var):
+
+```powershell
+$env:OPENAI_API_KEY="YOUR_KEY"
+.\Subtitles.Translate.Agent --file "D:\subs\demo.srt" --lang "Simplified Chinese"
+```
+
+Bilingual output:
+
+```powershell
+.\Subtitles.Translate.Agent --file "D:\subs\demo.srt" --lang "Simplified Chinese" --bilingual
+```
+
+Specify output path:
+
+```powershell
+.\Subtitles.Translate.Agent --file "D:\subs\demo.srt" --output "D:\subs\demo.en.srt"
+```
+
+#### Interactive mode
+Run without any arguments to enter interactive mode (it will prompt for file path, target language, and API key).
 
 #### Output Files
-- After translation, it will generate in the same directory as the original subtitle: `OriginalFileName.<targetLanguage>.srt`
-- Defaults to writing monolingual translation (`GenerateTranslatedSrt()`); for bilingual subtitles, change the entry point to `GenerateBilingualSrt()`
+- Default output: `OriginalFileName.<lang>.srt` in the same directory as the input
+- Use `--output` to specify the output path
+
+#### Options
+- `-f, --file <path>`: input subtitle file path (required in non-interactive mode)
+- `-l, --lang <language>`: target language (default: 简体中文)
+- `-k, --key <key>`: API key (or set `OPENAI_API_KEY`)
+- `-m, --model <model>`: model ID (default: gpt-4o)
+- `-e, --endpoint <url>`: API endpoint (default: https://api.openai.com/v1)
+- `-b, --bilingual`: generate bilingual subtitles
+- `-o, --output <path>`: output file path (default: `<input>.<lang>.srt`)
+- `--batch-size <n>`: subtitle lines per batch (default: 20)
+- `--slide-step <n>`: sliding window step (default: 10)
+- `--preceding <n>`: preceding context lines (default: 2)
+- `--following <n>`: following context preview lines (default: 2)
+- `--no-review`: disable Step4 review
+- `--no-polish`: disable polishing (if applicable)
+- `--no-timing-adjust`: disable timing adjustment
+- `--max-retries <n>`: max retries (default: 3)
+- `-h, --help`: show help
+- `-v, --version`: show version
 
 #### Custom Models and Endpoints
-Entry configuration is located at `AgentSystemConfig` initialization in [Program.cs:L90-L105](src/Subtitles.Translate.Agent/Program.cs#L90-L105), where `ModelId`, `Endpoint`, `ApiKey` etc. can be modified.
+Entry configuration is located at `AgentSystemConfig` initialization (see [Program.cs](src/Subtitles.Translate.Agent/Program.cs)), where `ModelId`, `Endpoint`, `ApiKey` etc. can be modified.
 
 ```csharp
 // src/Subtitles.Translate.Agent/Program.cs
