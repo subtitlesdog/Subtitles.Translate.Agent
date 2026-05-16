@@ -75,10 +75,16 @@ public class AgentEngine
         // Note: Translator Agent has an additional batch-level retry mechanism internally
         await RunStageAsync<Step3_TranslatorAgent>(WorkflowStage.TranslationCompleted);
 
-        // Step 5: Timing adjustment
+        // Step 5: Polishing
+        if (_context.Request.EnablePolishing)
+        {
+            await RunStageAsync<Step5_PolisherAgent>(WorkflowStage.PolishCompleted);
+        }
+
+        // Step 6: Timing adjustment
         if (_context.Request.EnableTimingAdjustment)
         {
-            await RunStageAsync<Step5_TimingAdjusterAgent>(WorkflowStage.TimingAdjusted);
+            await RunStageAsync<Step6_TimingAdjusterAgent>(WorkflowStage.TimingAdjusted);
         }
     }
 

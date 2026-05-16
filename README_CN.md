@@ -171,23 +171,22 @@ systemConfig.AddConfig(nameof(Step3_TranslatorAgent), new AgentConfig
 - **输入**：Step1 风格指南 + Step2 术语表 + 前文已译上下文 + 当前批次 + 后文预览。
 - **输出**：逐行初译（强制保持原 ID 与数量一致）；可选触发 Step4 进行语义审计后回写终稿。
 
-### 4. Step4_ReviewerAgent[待开源]（语义审计 / 回译协议）
+### 4. Step4_ReviewerAgent（语义审计 / 回译协议）
 - **做什么**：只针对语义准确性做“审计级”修正，专查错译、漏译与幻觉；不做润色，不做术语美化。
 - **输入**：Step3 的初译批次。
 - **输出**：逐行 PASS/FIXED、错误原因（critique）与最终采用译文（final_translation），并与 Step3 数量严格对齐。
 
-### 5. Step5_PolisherAgent[待开源]（术语合规 + 流式润色）
+### 5. Step5_PolisherAgent（术语合规 + 流式润色）
 - **做什么**：在不破坏时间轴切分点的前提下，先做术语强制执行与代词修正，再进行更地道的表达润色与节奏优化。
 - **输入**：Step2 术语表 + Step1 风格指南 + 当前批次译文 + 前文润色结果（用于连贯衔接）。
 - **输出**：polished_text、可选 note（俚语/术语说明）、optimization_tag（术语修正/上下文润色/风格适配/无修改）。
 
-### 6. Step6_TimingAdjusterAgent[待开源]（阅读舒适度时间轴微调）
+### 6. Step6_TimingAdjusterAgent（阅读舒适度时间轴微调）
 - **做什么**：根据译文长度与下一句起始时间，自动延长 end_time，提升可读性；只改结束时间，不动开始时间，不允许重叠。
 - **输入**：译文文本、原 start/end、下一句 start（含 50ms 安全缓冲）。
 - **输出**：KEEP/EXTEND、adjusted_end、reason，并将调整应用回字幕对象。
 
 ## 📅 开源计划
-- **2026年2月**：开放 Step6_TimingAdjusterAgent
 - **2026年3月**：开发 Windows / macOS / Web UI
 
 ## 🙏 致谢

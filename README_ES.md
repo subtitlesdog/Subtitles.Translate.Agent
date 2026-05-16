@@ -102,23 +102,22 @@ systemConfig.AddConfig(nameof(Step3_TranslatorAgent), new AgentConfig
 - **Entrada**: Guía de Estilo del Paso 1 + Glosario del Paso 2 + Contexto Traducido Anterior + Lote Actual + Vista Previa Futura.
 - **Salida**: Traducción inicial línea por línea (forzada a mantener IDs originales y cantidad consistente); opcionalmente activa el Paso 4 para auditoría semántica antes de escribir el borrador final.
 
-### 4. Step4_ReviewerAgent [Por Ser Código Abierto] (Auditoría Semántica / Protocolo de Retrotraducción)
+### 4. Step4_ReviewerAgent (Auditoría Semántica / Protocolo de Retrotraducción)
 - **Qué hace**: Solo realiza correcciones de "nivel de auditoría" para precisión semántica, verificando específicamente errores de traducción, omisiones y alucinaciones; sin pulido, sin embellecimiento de terminología.
 - **Entrada**: Lote de Traducción Inicial del Paso 3.
 - **Salida**: PASS/FIXED línea por línea, motivo del error (crítica) y traducción final adoptada (final_translation), estrictamente alineada con la cantidad del Paso 3.
 
-### 5. Step5_PolisherAgent [Por Ser Código Abierto] (Cumplimiento de Terminología + Pulido de Flujo)
+### 5. Step5_PolisherAgent (Cumplimiento de Terminología + Pulido de Flujo)
 - **Qué hace**: Sin romper los puntos de corte de la línea de tiempo, primero impone correcciones de terminología y pronombres, luego realiza un pulido de expresión más nativo y optimización del ritmo.
 - **Entrada**: Glosario del Paso 2 + Guía de Estilo del Paso 1 + Traducción de Lote Actual + Resultado Pulido Anterior (para transición coherente).
 - **Salida**: polished_text, nota opcional (explicación de jerga/terminología), optimization_tag (corrección de terminología/pulido de contexto/adaptación de estilo/sin cambio).
 
-### 6. Step6_TimingAdjusterAgent [Por Ser Código Abierto] (Ajuste Fino de Línea de Tiempo para Comodidad de Lectura)
+### 6. Step6_TimingAdjusterAgent (Ajuste Fino de Línea de Tiempo para Comodidad de Lectura)
 - **Qué hace**: Extiende automáticamente end_time basado en la longitud de la traducción y el tiempo de inicio de la siguiente oración para mejorar la legibilidad; solo cambia el tiempo de finalización, no toca el tiempo de inicio, no se permite superposición.
 - **Entrada**: Texto traducido, inicio/fin original, inicio de la siguiente oración (incluyendo búfer de seguridad de 50ms).
 - **Salida**: KEEP/EXTEND, adjusted_end, razón, y aplica ajustes al objeto de subtítulo.
 
 ## 📅 Plan de Código Abierto
-- **Febrero 2026**: Abrir Step6_TimingAdjusterAgent
 - **Marzo 2026**: Desarrollar UI de Windows / macOS / Web
 
 ## 🙏 Agradecimientos

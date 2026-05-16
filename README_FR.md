@@ -102,23 +102,22 @@ systemConfig.AddConfig(nameof(Step3_TranslatorAgent), new AgentConfig
 - **Entrée** : Guide de Style de l'Étape 1 + Glossaire de l'Étape 2 + Contexte Traduit Précédent + Lot Actuel + Aperçu Futur.
 - **Sortie** : Traduction initiale ligne par ligne (forcée de garder les ID originaux et la quantité cohérente) ; déclenche optionnellement l'Étape 4 pour audit sémantique avant d'écrire le brouillon final.
 
-### 4. Step4_ReviewerAgent [À Venir Open Source] (Audit Sémantique / Protocole de Rétro-traduction)
+### 4. Step4_ReviewerAgent (Audit Sémantique / Protocole de Rétro-traduction)
 - **Ce qu'il fait** : Effectue uniquement des corrections de "niveau audit" pour la précision sémantique, vérifiant spécifiquement les erreurs de traduction, omissions et hallucinations ; pas de polissage, pas d'embellissement de terminologie.
-- **Entrée** : Lot de Traduction Initiale de l'Étape 3.
+- **Entrée** : Lot de Traducción Initiale de l'Étape 3.
 - **Sortie** : PASS/FIXED ligne par ligne, raison de l'erreur (critique) et traduction finale adoptée (final_translation), strictement alignée avec la quantité de l'Étape 3.
 
-### 5. Step5_PolisherAgent [À Venir Open Source] (Conformité Terminologique + Polissage de Flux)
+### 5. Step5_PolisherAgent (Conformité Terminologique + Polissage de Flux)
 - **Ce qu'il fait** : Sans briser les points de coupure de la chronologie, impose d'abord les corrections de terminologie et de pronoms, puis effectue un polissage d'expression plus natif et une optimisation du rythme.
 - **Entrée** : Glossaire de l'Étape 2 + Guide de Style de l'Étape 1 + Traduction du Lot Actuel + Résultat Poli Précédent (pour une transition cohérente).
 - **Sortie** : polished_text, note optionnelle (explication argot/terminologie), optimization_tag (correction terminologie/polissage contexte/adaptation style/pas de changement).
 
-### 6. Step6_TimingAdjusterAgent [À Venir Open Source] (Ajustement Fin de la Chronologie pour Confort de Lecture)
+### 6. Step6_TimingAdjusterAgent (Ajustement Fin de la Chronologie pour Confort de Lecture)
 - **Ce qu'il fait** : Étend automatiquement end_time basé sur la longueur de la traduction et l'heure de début de la phrase suivante pour améliorer la lisibilité ; change uniquement l'heure de fin, ne touche pas à l'heure de début, chevauchement non autorisé.
 - **Entrée** : Texte traduit, début/fin original, début de la phrase suivante (y compris tampon de sécurité de 50ms).
 - **Sortie** : KEEP/EXTEND, adjusted_end, raison, et applique les ajustements à l'objet sous-titre.
 
 ## 📅 Plan Open Source
-- **Février 2026** : Ouvrir Step6_TimingAdjusterAgent
 - **Mars 2026** : Développer UI Windows / macOS / Web
 
 ## 🙏 Remerciements

@@ -169,23 +169,22 @@ systemConfig.AddConfig(nameof(Step3_TranslatorAgent), new AgentConfig
 - **Input**: Step 1 Style Guide + Step 2 Glossary + Previous Translated Context + Current Batch + Future Preview.
 - **Output**: Line-by-line initial translation (forced to keep original IDs and quantity consistent); optionally triggers Step 4 for semantic audit before writing final draft.
 
-### 4. Step4_ReviewerAgent [To Be Open Sourced] (Semantic Audit / Back-Translation Protocol)
+### 4. Step4_ReviewerAgent (Semantic Audit / Back-Translation Protocol)
 - **What it does**: Only performs "audit-level" corrections for semantic accuracy, specifically checking for mistranslations, omissions, and hallucinations; no polishing, no terminology beautification.
 - **Input**: Step 3 Initial Translation Batch.
 - **Output**: Line-by-line PASS/FIXED, error reason (critique), and final adopted translation (final_translation), strictly aligned with Step 3 quantity.
 
-### 5. Step5_PolisherAgent [To Be Open Sourced] (Terminology Compliance + Flow Polishing)
+### 5. Step5_PolisherAgent (Terminology Compliance + Flow Polishing)
 - **What it does**: Without breaking timeline cut points, first enforces terminology and pronoun corrections, then performs more native expression polishing and rhythm optimization.
 - **Input**: Step 2 Glossary + Step 1 Style Guide + Current Batch Translation + Previous Polished Result (for coherent transition).
 - **Output**: polished_text, optional note (slang/terminology explanation), optimization_tag (terminology correction/context polishing/style adaptation/no change).
 
-### 6. Step6_TimingAdjusterAgent [To Be Open Sourced] (Reading Comfort Timeline Fine-tuning)
+### 6. Step6_TimingAdjusterAgent (Reading Comfort Timeline Fine-tuning)
 - **What it does**: Automatically extends end_time based on translation length and next sentence start time to improve readability; only changes end time, does not touch start time, overlap not allowed.
 - **Input**: Translated text, original start/end, next sentence start (including 50ms safety buffer).
 - **Output**: KEEP/EXTEND, adjusted_end, reason, and applies adjustments back to subtitle object.
 
 ## 📅 Open Source Plan
-- **February 2026**: Open Step6_TimingAdjusterAgent
 - **March 2026**: Develop Windows / macOS / Web UI
 
 ## 🙏 Acknowledgements

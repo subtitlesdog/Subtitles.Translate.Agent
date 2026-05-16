@@ -10,66 +10,66 @@ using System.Text.RegularExpressions;
 namespace Subtitles.Translate.Agent.Core.Agents
 {
     /// <summary>
-    /// Step 5: 时间轴调整 Agent
-    /// 根据中文字幕的阅读长度，微调字幕的结束时间
+    /// Step 6: Timing Adjustment Agent
+    /// Fine-tune subtitle end times based on reading length
     /// </summary>
-    public class Step5_TimingAdjusterAgent : AgentBase
+    public class Step6_TimingAdjusterAgent : AgentBase
     {
-        public const string AgentName = nameof(Step5_TimingAdjusterAgent);
+        public const string AgentName = nameof(Step6_TimingAdjusterAgent);
         private readonly AIAgent _agent;
         private int _currentBatchIndex;
 
         /// <summary>
-        /// 舒适阅读速度（字/秒）
+        /// Comfortable reading speed (chars/sec)
         /// </summary>
         private const double ComfortableCps = 5.0;
 
         /// <summary>
-        /// CPS 阈值，超过此值需要延长
+        /// CPS threshold, extension needed if exceeded
         /// </summary>
         private const double CpsThreshold = 7.0;
 
         /// <summary>
-        /// 最小帧间隙（毫秒）
+        /// Minimum frame gap (ms)
         /// </summary>
         private const double MinGapMs = 50;
 
         /// <summary>
-        /// 默认最大延长时间（毫秒）- 用于最后一句
+        /// Default max extension (ms) - used for the last sentence
         /// </summary>
         private const double DefaultMaxExtensionMs = 1000;
 
         /// <summary>
-        /// 短句最小时长（毫秒）
+        /// Minimum duration for short sentences (ms)
         /// </summary>
         private const double ShortLineMinDurationMs = 1000;
 
-        public Step5_TimingAdjusterAgent(WorkflowContext context)
+        public Step6_TimingAdjusterAgent(WorkflowContext context)
             : base(context, AgentName)
         {
-            // 创建 ChatClient 并初始化 Agent
+            // Create ChatClient and initialize Agent
             var client = CreateChatClient(_agentConfig.ModelId);
             _agent = client.CreateAIAgent().AsBuilder().Build();
         }
 
         /// <summary>
-        /// 执行时间轴调整（全部使用 AI）
+        /// Execute timing adjustment (using AI)
         /// </summary>
         public override async Task ExecuteAsync()
         {
-            _logger?.LogInformation("===== {AgentName} 开始执行 (AI 模式) =====", AgentName);
+            _logger?.LogInformation("===== {AgentName} started execution (AI Mode) =====", AgentName);
 
             var paragraphs = _context.Subtitle.Paragraphs;
             var translatedItems = _context.TranslatedItems;
             int totalCount = Math.Min(paragraphs.Count, translatedItems.Count);
 
-            // 初始化结果
+            // Initialize results
             _context.TimingAdjustments = new List<TimingAdjustmentItem>();
             _context.TimingStatistics = new TimingStatistics();
 
-            // 使用配置的 BatchSize，默认 20
+            // Use configured BatchSize, default 20
             int batchSize = _context.Request.BatchSize > 0 ? _context.Request.BatchSize : 20;
-            _logger?.LogDebug("待处理字幕数: {Count}, 批次大小: {BatchSize}", totalCount, batchSize);
+            _logger?.LogDebug("Subtitles to process: {Count}, Batch size: {BatchSize}", totalCount, batchSize);
 
             int startIndex = 0;
             int batchIndex = 0;
@@ -78,14 +78,14 @@ namespace Subtitles.Translate.Agent.Core.Agents
             {
                 int count = Math.Min(batchSize, totalCount - startIndex);
 
-                // 带重试机制处理批次
+                // Process batch with retry mechanism
                 await ExecuteBatchWithRetryAsync(_context, startIndex, count, batchIndex);
 
                 startIndex += count;
                 batchIndex++;
             }
 
-            _logger?.LogInformation("===== {AgentName} 执行完成，延长 {Extended} 条，保持 {Kept} 条 =====",
+            _logger?.LogInformation("===== {AgentName} completed, extended {Extended}, kept {Kept} =====",
                 AgentName, _context.TimingStatistics.ExtendedCount, _context.TimingStatistics.KeptCount);
         }
 
@@ -107,7 +107,7 @@ namespace Subtitles.Translate.Agent.Core.Agents
                     retryCount++;
                     if (retryCount <= maxRetries)
                     {
-                        _logger?.LogWarning(ex, "批次 {BatchIndex} 时间轴调整失败，正在进行第 {RetryCount}/{MaxRetries} 次重试...",
+                        _logger?.LogWarning(ex, "Batch {BatchIndex} timing adjustment failed, retrying {RetryCount}/{MaxRetries}...",
                             batchIndex, retryCount, maxRetries);
                         await Task.Delay(1000 * retryCount);
                     }
@@ -124,38 +124,38 @@ namespace Subtitles.Translate.Agent.Core.Agents
             _currentBatchIndex = batchIndex;
             var prompt = GetPrompt(context, startIndex, count);
 
-            _logger?.LogInformation("正在调用 LLM (模型: {ModelId}, 批次: {BatchIndex})...", _agentConfig.ModelId, batchIndex);
+            _logger?.LogInformation("Calling LLM (Model: {ModelId}, Batch: {BatchIndex})...", _agentConfig.ModelId, batchIndex);
             var response = await _agent.RunAsync(prompt);
 
-            // 记录 Token 使用量
+            // Record Token usage
             RecordTokenUsage(AgentName, response.Usage, batchIndex);
 
-            // 解析响应
+            // Parse response
             var adjustments = ParseJsonResponse<List<TimingAdjustmentItem>>(response.Text);
 
             if (adjustments != null && adjustments.Count > 0)
             {
-                // 应用调整到原始字幕
+                // Apply adjustments to original subtitles
                 ApplyAdjustments(context, adjustments);
                 context.TimingAdjustments.AddRange(adjustments);
             }
             else
             {
-                _logger?.LogWarning("{AgentName} AI 响应解析失败或为空 (批次 {BatchIndex})", AgentName, batchIndex);
-                // 抛出异常以触发重试
-                throw new InvalidOperationException($"AI 响应解析失败 (批次 {batchIndex})");
+                _logger?.LogWarning("{AgentName} AI response parsing failed or empty (Batch {BatchIndex})", AgentName, batchIndex);
+                // Throw exception to trigger retry
+                throw new InvalidOperationException($"AI response parsing failed (Batch {batchIndex})");
             }
         }
 
         /// <summary>
-        /// 生成 AI 时间轴调整提示词
+        /// Generate AI timing adjustment prompt
         /// </summary>
         public string GetPrompt(WorkflowContext context, int startIndex, int count)
         {
             var paragraphs = context.Subtitle.Paragraphs;
             var translatedItems = context.TranslatedItems;
 
-            // 构建输入数据
+            // Build input data
             var inputList = new List<object>();
 
             int endIndex = startIndex + count;
@@ -169,7 +169,7 @@ namespace Subtitles.Translate.Agent.Core.Agents
                 var endTimeMs = paragraph.EndTime.TotalMilliseconds;
 
                 double? nextLineStartMs = null;
-                // 注意：这里需要获取全局的下一句，不仅仅是 batch 内的
+                // Note: Need to get global next line, not just within batch
                 if (i + 1 < paragraphs.Count)
                 {
                     nextLineStartMs = paragraphs[i + 1].StartTime.TotalMilliseconds;
@@ -189,40 +189,40 @@ namespace Subtitles.Translate.Agent.Core.Agents
 
             var prompt = $$"""
 # Role 
- 你是一位字幕时间轴专家（Subtitle Timing Specialist）。 
- **核心任务**：根据文本长度优化字幕的`end_time`，确保观众有足够阅读时间。 
- **核心原则**：只改结束时间（end_time），绝不触碰开始时间（start_time），绝不导致重叠。 
+ You are a Subtitle Timing Specialist. 
+ **Core Task**: Optimize subtitle `end_time` based on text length to ensure viewers have enough reading time. 
+ **Core Principles**: Only change `end_time`, never touch `start_time`, never cause overlaps. 
  
  # Inputs 
  {{inputData}} 
- (包含字段: id, text, start_time, end_time, next_line_start_time) 
+ (Includes fields: id, text, start_time, end_time, next_line_start_time) 
  
  # Rules (Simplified Logic) 
  
- 请对每一行执行以下**阅读舒适度检查**： 
+ Perform the following **Reading Comfort Check** for each line: 
  
- 1.  **Density Check (密度检查)** 
-     * 观察 `text` 的长度和当前 `duration` (`end` - `start`)。 
-     * 如果文本较长但持续时间很短（例如：超过 10 个字符但少于 1.5 秒），标记为 **"Rushed (局促)"**。 
-     * 如果文本极短（如 "No.", "好。"）但时间很长，标记为 **"Loose (松散)"**，通常无需处理。 
+ 1.  **Density Check** 
+     * Observe the length of `text` and current `duration` (`end` - `start`). 
+     * If text is long but duration is very short (e.g., over 10 chars but less than 1.5s), mark as **"Rushed"**. 
+     * If text is extremely short (e.g., "No.", "Fine.") but time is very long, mark as **"Loose"**, usually no action needed. 
  
- 2.  **Gap Filling Strategy (空隙填充策略)** 
-     * 如果判定为 **"Rushed"**，检查当前行与下一行之间是否有**空隙 (Gap)**。 
-     * `Max_End_Time` = `next_line_start_time` - **50ms** (保留 50毫秒 安全缓冲)。 
-     * **Action**: 将 `end_time` 延长至 `Max_End_Time`，以最大化阅读时间。 
-     * *注意*：如果这是最后一行（无 next_line），且文本很长，可酌情延长 1-2 秒。 
+ 2.  **Gap Filling Strategy** 
+     * If judged as **"Rushed"**, check if there is a **Gap** between the current line and the next line. 
+     * `Max_End_Time` = `next_line_start_time` - **50ms** (50ms safety buffer). 
+     * **Action**: Extend `end_time` to `Max_End_Time` to maximize reading time. 
+     * *Note*: If this is the last line (no next_line) and text is long, extend by 1-2 seconds as appropriate. 
  
- 3.  **Minimum Duration Constraint (最短时常约束)** 
-     * 除单词（如 "Hi", "是"）外，尽量保证每一行字幕至少停留 **1.2秒 (1200ms)**。 
-     * 如果有空隙，优先满足 1.2秒 的停留时间。 
+ 3.  **Minimum Duration Constraint** 
+     * Except for single words (e.g., "Hi", "Yes"), try to ensure each line stays for at least **1.2 seconds (1200ms)**. 
+     * If there is a gap, prioritize meeting the 1.2s duration. 
  
  # Constraints 
- * **Language Agnostic**: 无论是中文、英文还是混合语言，统一基于“字符看起来很多”这一视觉标准判断。 
- * **Safety First**: 修改后的 `end_time` **严格禁止** 大于或等于 `next_line_start_time`。 
+ * **Language Agnostic**: Regardless of language, judge based on the visual standard of "looks like a lot of characters." 
+ * **Safety First**: Modified `end_time` **strictly forbidden** to be greater than or equal to `next_line_start_time`. 
  
  # Output Requirements 
- 1.  **Format**: 纯 JSON 数组，无 Markdown。 
- 2.  **Data**: 必须包含 `action` ("KEEP" 或 "EXTEND") 和 `reason`。 
+ 1.  **Format**: Pure JSON array, no Markdown. 
+ 2.  **Data**: Must include `action` ("KEEP" or "EXTEND") and `reason`. 
  
  # Output Example 
  [ 
@@ -232,7 +232,7 @@ namespace Subtitles.Translate.Agent.Core.Agents
      "original_end": "00:00:02,500", 
      "adjusted_end": "00:00:03,100", 
      "action": "EXTEND", 
-     "reason": "文本较长(42 chars)，利用后方空隙延长 600ms 以提升阅读体验。" 
+     "reason": "Text is long (42 chars), utilizing gap to extend 600ms for better reading experience." 
    }, 
    { 
      "id": "2", 
@@ -240,7 +240,7 @@ namespace Subtitles.Translate.Agent.Core.Agents
      "original_end": "00:00:04,000", 
      "adjusted_end": "00:00:04,000", 
      "action": "KEEP", 
-     "reason": "文本极短，当前时长已足够。" 
+     "reason": "Text is extremely short, current duration is sufficient." 
    } 
  ] 
 """;
@@ -249,7 +249,7 @@ namespace Subtitles.Translate.Agent.Core.Agents
         }
 
         /// <summary>
-        /// 格式化时间码
+        /// Format timecode
         /// </summary>
         private static string FormatTimeCode(double totalMs)
         {
@@ -258,11 +258,11 @@ namespace Subtitles.Translate.Agent.Core.Agents
         }
 
         /// <summary>
-        /// 解析时间码
+        /// Parse timecode
         /// </summary>
         private static double ParseTimeCode(string timeCode)
         {
-            // 格式: HH:MM:SS,mmm
+            // Format: HH:MM:SS,mmm
             var pattern = @"(\d{2}):(\d{2}):(\d{2})[,.](\d{3})";
             var match = Regex.Match(timeCode, pattern);
             if (match.Success)
@@ -279,7 +279,7 @@ namespace Subtitles.Translate.Agent.Core.Agents
 
 
         /// <summary>
-        /// 应用时间轴调整到原始字幕
+        /// Apply timing adjustments to original subtitle
         /// </summary>
         private void ApplyAdjustments(WorkflowContext context, List<TimingAdjustmentItem> adjustments)
         {
@@ -317,69 +317,69 @@ namespace Subtitles.Translate.Agent.Core.Agents
         }
     }
 
-    #region Step5 Result Models
+    #region Step6 Result Models
 
     /// <summary>
-    /// 单条时间轴调整结果
+    /// Single timing adjustment result
     /// </summary>
     public class TimingAdjustmentItem
     {
         /// <summary>
-        /// 字幕序号
+        /// Subtitle index
         /// </summary>
         [JsonPropertyName("id")]
         public string Id { get; set; } = string.Empty;
 
         /// <summary>
-        /// 润色后文本
+        /// Polished text
         /// </summary>
         [JsonPropertyName("text")]
         public string PolishedText { get; set; } = string.Empty;
 
         /// <summary>
-        /// 原始时长（毫秒）
+        /// Original duration (ms)
         /// </summary>
         [JsonPropertyName("original_duration_ms")]
         public int OriginalDurationMs { get; set; }
 
         /// <summary>
-        /// 字符数（不含标点）
+        /// Character count (excluding punctuation)
         /// </summary>
         [JsonPropertyName("char_count")]
         public int CharCount { get; set; }
 
         /// <summary>
-        /// 操作类型：KEEP（保持）或 EXTEND（延长）
+        /// Action type: KEEP or EXTEND
         /// </summary>
         [JsonPropertyName("action")]
         public string Action { get; set; } = "KEEP";
 
         /// <summary>
-        /// 原始结束时间
+        /// Original end time
         /// </summary>
         [JsonPropertyName("original_end")]
         public string OriginalEndTime { get; set; } = string.Empty;
 
         /// <summary>
-        /// 调整后的结束时间
+        /// Adjusted end time
         /// </summary>
         [JsonPropertyName("adjusted_end")]
         public string AdjustedEndTime { get; set; } = string.Empty;
 
         /// <summary>
-        /// 调整原因
+        /// Adjustment reason
         /// </summary>
         [JsonPropertyName("reason")]
         public string Reason { get; set; } = string.Empty;
 
         /// <summary>
-        /// 是否进行了延长
+        /// Whether it was extended
         /// </summary>
         [JsonIgnore]
         public bool IsExtended => Action?.ToUpperInvariant() == "EXTEND";
 
         /// <summary>
-        /// 原始 CPS
+        /// Original CPS
         /// </summary>
         [JsonIgnore]
         public double OriginalCps => OriginalDurationMs > 0
@@ -388,30 +388,31 @@ namespace Subtitles.Translate.Agent.Core.Agents
     }
 
     /// <summary>
-    /// 时间轴调整统计信息
+    /// Timing adjustment statistics
     /// </summary>
     public class TimingStatistics
     {
         /// <summary>
-        /// 总处理数
+        /// Total processed count
         /// </summary>
         public int TotalProcessed { get; set; }
 
         /// <summary>
-        /// 延长数
+        /// Extended count
         /// </summary>
         public int ExtendedCount { get; set; }
 
         /// <summary>
-        /// 保持不变数
+        /// Kept unchanged count
         /// </summary>
         public int KeptCount { get; set; }
 
         /// <summary>
-        /// 总延长时长（毫秒）
+        /// Total extension duration (ms)
         /// </summary>
         public long TotalExtensionMs { get; set; }
     }
 
     #endregion
+}
 }

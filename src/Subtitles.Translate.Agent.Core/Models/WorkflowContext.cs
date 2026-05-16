@@ -80,6 +80,11 @@ public class WorkflowContext
     public ReviewStatistics ReviewStatistics { get; set; } = new();
 
     /// <summary>
+    /// Polishing statistics
+    /// </summary>
+    public PolishStatistics PolishStatistics { get; set; } = new();
+
+    /// <summary>
     /// Timing adjustments list
     /// </summary>
     public List<TimingAdjustmentItem> TimingAdjustments { get; set; } = new();

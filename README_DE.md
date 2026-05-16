@@ -102,23 +102,22 @@ systemConfig.AddConfig(nameof(Step3_TranslatorAgent), new AgentConfig
 - **Eingabe**: Schritt 1 Stilguide + Schritt 2 Glossar + Vorheriger übersetzter Kontext + Aktuelle Charge + Zukünftige Vorschau.
 - **Ausgabe**: Zeilenweise Erstübersetzung (gezwungen, ursprüngliche IDs und Menge konsistent zu halten); löst optional Schritt 4 für semantische Prüfung aus, bevor der endgültige Entwurf geschrieben wird.
 
-### 4. Step4_ReviewerAgent [Wird Open Source] (Semantische Prüfung / Rückübersetzungsprotokoll)
+### 4. Step4_ReviewerAgent (Semantische Prüfung / Rückübersetzungsprotokoll)
 - **Was es tut**: Führt nur Korrekturen auf "Prüfungsebene" für semantische Genauigkeit durch, prüft speziell auf Übersetzungsfehler, Auslassungen und Halluzinationen; kein Polieren, keine Terminologieverschönerung.
 - **Eingabe**: Schritt 3 Erstübersetzungscharge.
 - **Ausgabe**: Zeilenweise PASS/FIXED, Fehlergrund (Kritik) und endgültig angenommene Übersetzung (final_translation), streng an Schritt 3 Menge ausgerichtet.
 
-### 5. Step5_PolisherAgent [Wird Open Source] (Terminologie-Einhaltung + Fluss-Polieren)
+### 5. Step5_PolisherAgent (Terminologie-Einhaltung + Fluss-Polieren)
 - **Was es tut**: Ohne Zeitachsen-Schnittpunkte zu brechen, erzwingt zuerst Terminologie- und Pronomenkorrekturen, führt dann ein nativeres Ausdruckspolieren und Rhythmusoptimierung durch.
 - **Eingabe**: Schritt 2 Glossar + Schritt 1 Stilguide + Aktuelle Chargenübersetzung + Vorheriges Polierergebnis (für kohärenten Übergang).
 - **Ausgabe**: polished_text, optionale Notiz (Slang/Terminologieerklärung), optimization_tag (Terminologiekorrektur/Kontextpolieren/Stilanpassung/keine Änderung).
 
-### 6. Step6_TimingAdjusterAgent [Wird Open Source] (Zeitachsen-Feinabstimmung für Lesekomfort)
+### 6. Step6_TimingAdjusterAgent (Zeitachsen-Feinabstimmung für Lesekomfort)
 - **Was es tut**: Verlängert automatisch end_time basierend auf Übersetzungslänge und Startzeit des nächsten Satzes, um die Lesbarkeit zu verbessern; ändert nur die Endzeit, berührt nicht die Startzeit, Überlappung nicht erlaubt.
 - **Eingabe**: Übersetzter Text, Original Start/Ende, Nächster Satz Start (einschließlich 50ms Sicherheitspuffer).
 - **Ausgabe**: KEEP/EXTEND, adjusted_end, Grund, und wendet Anpassungen auf das Untertitelobjekt an.
 
 ## 📅 Open Source Plan
-- **Februar 2026**: Öffne Step6_TimingAdjusterAgent
 - **März 2026**: Entwickle Windows / macOS / Web UI
 
 ## 🙏 Danksagungen
